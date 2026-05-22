@@ -2,3 +2,5 @@ streamlit
 pdfplumber
 google-generativeai
 python-dotenv
+plotly
+reportlab
