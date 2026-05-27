@@ -6,47 +6,218 @@ import json
 import plotly.graph_objects as go
 from dotenv import load_dotenv
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 from io import BytesIO
 
 # Load environment variables
 load_dotenv()
 
-# Configure Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
+# Streamlit UI Configuration (Must be first Streamlit command)
+st.set_page_config(
+    page_title="Professional AI CV Reviewer",
+    page_icon="📄",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Custom CSS for a professional look
+# Initialize Session State
+if "api_key" not in st.session_state:
+    st.session_state["api_key"] = os.getenv("GOOGLE_API_KEY") or ""
+
+if "analysis" not in st.session_state:
+    st.session_state["analysis"] = None
+
+if "job_desc" not in st.session_state:
+    st.session_state["job_desc"] = ""
+
+# Configure Gemini API if key is present
+if st.session_state["api_key"]:
+    genai.configure(api_key=st.session_state["api_key"])
+
+# Custom Premium CSS Styling
 st.markdown("""
     <style>
-    .main {
-        background-color: #f8f9fa;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    /* Global theme settings */
+    html, body, [data-testid="stAppViewContainer"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #f8fafc;
+        color: #0f172a;
     }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #007bff;
+    
+    /* Header layout styling */
+    .header-container {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
         color: white;
-        font-weight: bold;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
     }
-    .stButton>button:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
+    
+    .header-title {
+        font-size: 2.3rem;
+        font-weight: 700;
+        margin: 0;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
+        background: linear-gradient(to right, #ffffff, #c7d2fe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
-    .reportview-container .main .block-container {
-        padding-top: 2rem;
+    
+    .header-subtitle {
+        font-size: 1.05rem;
+        color: #e0e7ff;
+        font-weight: 400;
+        margin: 0;
     }
-    .metric-card {
+    
+    /* Sidebar customization */
+    [data-testid="stSidebar"] {
+        background-color: #0f172a !important;
+        border-right: 1px solid #1e293b;
+    }
+    
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] label {
+        color: #f8fafc !important;
+    }
+    
+    /* Primary buttons styling */
+    div.stButton > button:first-child {
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        width: 100%;
+        height: auto;
+    }
+    
+    div.stButton > button:first-child:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+        border: none;
+        color: white;
+    }
+    
+    div.stButton > button:first-child:active {
+        transform: translateY(1px);
+    }
+    
+    /* Export and Download buttons */
+    div.stDownloadButton > button:first-child {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+        width: 100%;
+        height: auto;
+    }
+    
+    div.stDownloadButton > button:first-child:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        border: none;
+        color: white;
+    }
+    
+    /* UI Cards container */
+    .card {
         background-color: white;
-        padding: 20px;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-title {
+        font-weight: 600;
+        font-size: 1.15rem;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Custom tabs design */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #e2e8f0;
+        padding: 6px;
         border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        text-align: center;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 42px;
+        white-space: pre;
+        background-color: transparent;
+        border-radius: 8px;
+        color: #475569;
+        font-weight: 500;
+        transition: all 0.2s;
+        border: none;
+        padding: 0 20px;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #0f172a;
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: white !important;
+        color: #4f46e5 !important;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+        font-weight: 600;
+    }
+    
+    /* Feedback highlights styling */
+    .strength-item {
+        padding: 10px 14px;
+        background-color: #f0fdf4;
+        border-left: 4px solid #10b981;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        color: #14532d;
+    }
+    
+    .keyword-item {
+        display: inline-block;
+        padding: 6px 12px;
+        background-color: #fef2f2;
+        border: 1px solid #fee2e2;
+        border-radius: 100px;
+        margin: 4px;
+        font-size: 0.85rem;
+        color: #991b1b;
+        font-weight: 500;
+    }
+    
+    .roadmap-item {
+        padding: 10px 14px;
+        background-color: #f0f9ff;
+        border-left: 4px solid #0284c7;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        color: #0c4a6e;
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 def extract_text_from_pdf(uploaded_file):
     """Extracts text from an uploaded PDF file."""
@@ -58,19 +229,36 @@ def extract_text_from_pdf(uploaded_file):
                 if page_text:
                     text += page_text + "\n"
     except Exception as e:
-        st.error(f"Error extracting PDF: {e}")
+        st.error(f"Error extracting PDF text: {e}")
     return text
 
+
+def clean_json_response(json_text):
+    """Safely cleans the raw API output text and wraps JSON parsing logic."""
+    json_text = json_text.strip()
+    if json_text.startswith("```json"):
+        json_text = json_text[7:]
+    elif json_text.startswith("```"):
+        json_text = json_text[3:]
+    if json_text.endswith("```"):
+        json_text = json_text[:-3]
+    return json.loads(json_text.strip())
+
+
 def analyze_cv(cv_text, job_description):
-    """Analyzes the CV against the job description using Gemini with structured output."""
-    if not api_key:
+    """Analyzes the CV against the job description using Gemini with native JSON mode."""
+    if not st.session_state["api_key"]:
         return None
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Native structured JSON mode configuration
+    model = genai.GenerativeModel(
+        model_name='gemini-1.5-flash',
+        generation_config={"response_mime_type": "application/json"}
+    )
 
     prompt = f"""
     You are an expert HR Recruiter and Career Coach specializing in ATS (Applicant Tracking Systems) and candidate evaluation.
-    Analyze the following CV against the provided Job Description and return your analysis STRICTLY in JSON format.
+    Analyze the following CV against the provided Job Description and return your analysis in JSON format.
 
     CV Content:
     {cv_text}
@@ -78,10 +266,10 @@ def analyze_cv(cv_text, job_description):
     Job Description:
     {job_description}
 
-    The JSON response must have exactly these keys:
-    1. "match_score": (int, 0-100)
+    The JSON response must have exactly these keys and types:
+    1. "match_score": (integer between 0 and 100)
     2. "missing_keywords": (list of strings)
-    3. "formatting_score": (int, 0-100)
+    3. "formatting_score": (integer between 0 and 100)
     4. "formatting_feedback": (string)
     5. "star_method_evaluation": (string)
     6. "ats_compatibility": (string)
@@ -89,178 +277,312 @@ def analyze_cv(cv_text, job_description):
     8. "improvement_suggestions": (list of strings)
     9. "summary": (string, brief 2-sentence summary)
 
-    Ensure the JSON is valid and properly escaped.
+    Ensure all keys exist and values match the requested formats.
     """
 
     try:
         response = model.generate_content(prompt)
-        json_text = response.text.strip()
-        if json_text.startswith("```json"):
-            json_text = json_text[7:-3].strip()
-        elif json_text.startswith("```"):
-            json_text = json_text[3:-3].strip()
-        
-        return json.loads(json_text)
+        return clean_json_response(response.text)
     except Exception as e:
-        st.error(f"Error during analysis: {str(e)}")
+        st.error(f"Error during AI analysis: {str(e)}")
         return None
 
+
 def create_pdf_report(analysis_data):
-    """Generates a PDF report of the analysis."""
+    """Generates a professional multi-page PDF report using ReportLab flowables to handle wrapping."""
     buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(100, height - 50, "CV Analysis Report")
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+    story = []
     
-    p.setFont("Helvetica", 12)
-    p.drawString(100, height - 80, f"Match Score: {analysis_data['match_score']}%")
-    p.drawString(100, height - 100, f"Summary: {analysis_data['summary']}")
+    # Styles Setup
+    styles = getSampleStyleSheet()
     
-    y = height - 130
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(100, y, "Missing Keywords:")
-    p.setFont("Helvetica", 10)
-    for kw in analysis_data['missing_keywords']:
-        y -= 15
-        p.drawString(120, y, f"- {kw}")
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=24,
+        leading=28,
+        textColor=colors.HexColor('#1e1b4b'),
+        spaceAfter=15
+    )
     
-    y -= 30
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(100, y, "Top Strengths:")
-    p.setFont("Helvetica", 10)
+    h2_style = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=13,
+        leading=17,
+        textColor=colors.HexColor('#4f46e5'),
+        spaceBefore=14,
+        spaceAfter=6,
+        keepWithNext=True
+    )
+    
+    body_style = ParagraphStyle(
+        'BodyTextCustom',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor('#334155'),
+        spaceAfter=6
+    )
+    
+    bullet_style = ParagraphStyle(
+        'BulletCustom',
+        parent=body_style,
+        leftIndent=15,
+        firstLineIndent=-10,
+        spaceAfter=4
+    )
+    
+    # Document Header
+    story.append(Paragraph("CV Optimization & Match Report", title_style))
+    story.append(Paragraph("A comprehensive ATS compatibility, formatting, and performance analysis powered by AI.", body_style))
+    story.append(Spacer(1, 15))
+    
+    # KPI Grid Table
+    score_data = [
+        [
+            Paragraph(f"<b>Match Score:</b> {analysis_data['match_score']}%", body_style),
+            Paragraph(f"<b>Formatting Score:</b> {analysis_data['formatting_score']}%", body_style)
+        ]
+    ]
+    score_table = Table(score_data, colWidths=[250, 250])
+    score_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#f8fafc')),
+        ('PADDING', (0,0), (-1,-1), 12),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 12),
+        ('LINEBELOW', (0,0), (-1,-1), 1, colors.HexColor('#e2e8f0')),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#e2e8f0')),
+    ]))
+    story.append(score_table)
+    story.append(Spacer(1, 15))
+    
+    # Executive Summary
+    story.append(Paragraph("Executive Summary", h2_style))
+    story.append(Paragraph(analysis_data['summary'], body_style))
+    story.append(Spacer(1, 10))
+    
+    # Top Strengths
+    story.append(Paragraph("Top Strengths", h2_style))
     for strength in analysis_data['top_strengths']:
-        y -= 15
-        p.drawString(120, y, f"- {strength}")
-
-    y -= 30
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(100, y, "Improvement Suggestions:")
-    p.setFont("Helvetica", 10)
+        story.append(Paragraph(f"• {strength}", bullet_style))
+    story.append(Spacer(1, 10))
+    
+    # Missing Keywords
+    story.append(Paragraph("Missing Keywords & Gaps", h2_style))
+    if analysis_data['missing_keywords']:
+        keywords_str = ", ".join(analysis_data['missing_keywords'])
+        story.append(Paragraph(keywords_str, body_style))
+    else:
+        story.append(Paragraph("No critical keywords missing from CV.", body_style))
+    story.append(Spacer(1, 10))
+    
+    # ATS Compatibility
+    story.append(Paragraph("ATS Compatibility & Format Feedback", h2_style))
+    story.append(Paragraph(f"<b>System Readability:</b> {analysis_data['ats_compatibility']}", body_style))
+    story.append(Paragraph(f"<b>Structuring Tips:</b> {analysis_data['formatting_feedback']}", body_style))
+    story.append(Spacer(1, 10))
+    
+    # STAR Method Evaluation
+    story.append(Paragraph("STAR Impact Analysis", h2_style))
+    story.append(Paragraph(analysis_data['star_method_evaluation'], body_style))
+    story.append(Spacer(1, 10))
+    
+    # Action Roadmap
+    story.append(Paragraph("Actionable Optimization Roadmap", h2_style))
     for suggestion in analysis_data['improvement_suggestions']:
-        y -= 15
-        if len(suggestion) > 80:
-             p.drawString(120, y, f"- {suggestion[:80]}...")
-        else:
-            p.drawString(120, y, f"- {suggestion}")
-
-    p.showPage()
-    p.save()
+        story.append(Paragraph(f"• {suggestion}", bullet_style))
+        
+    # Running footer template
+    def add_footer(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Helvetica', 8)
+        canvas.setFillColor(colors.HexColor('#64748b'))
+        canvas.drawString(54, 30, "Confidential | Professional CV Reviewer Report")
+        canvas.drawRightString(letter[0] - 54, 30, f"Page {doc.page}")
+        canvas.restoreState()
+        
+    doc.build(story, onFirstPage=add_footer, onLaterPages=add_footer)
     buffer.seek(0)
     return buffer
 
-# Streamlit UI
-st.set_page_config(page_title="Professional AI CV Reviewer", page_icon="📄", layout="wide")
 
-# Sidebar for configuration
+# Sidebar settings configuration
 with st.sidebar:
-    st.title("🛠 Settings")
-    if not api_key:
-        new_api_key = st.text_input("Gemini API Key:", type="password", help="Get your key from Google AI Studio")
-        if new_api_key:
-            genai.configure(api_key=new_api_key)
-            api_key = new_api_key
-            st.success("API Key configured!")
-    else:
-        st.success("Gemini API Connected")
+    st.markdown("### Settings & Configuration")
     
+    # API key load / input handling
+    if os.getenv("GOOGLE_API_KEY"):
+        st.success("✅ API Key loaded from system .env file")
+        st.session_state["api_key"] = os.getenv("GOOGLE_API_KEY")
+    else:
+        user_key = st.text_input("Gemini API Key:", value=st.session_state["api_key"], type="password", help="Configure your Gemini API key here")
+        if user_key and user_key != st.session_state["api_key"]:
+            st.session_state["api_key"] = user_key
+            genai.configure(api_key=user_key)
+            st.success("API Key updated for session!")
+
     st.divider()
-    st.info(\"\"\"
-    **Pro Tip for Recruiters:**
-    This tool evaluates CVs based on modern ATS standards, STAR method efficacy, and semantic keyword matching.
-    \"\"\")
+    st.markdown("""
+    **Evaluation Metrics:**
+    - **ATS Standard Compatibility**: Analyzes file headers, standard margins, and structural elements.
+    - **Keyword Semantic Fit**: Evaluates gaps between CV terms and the job description.
+    - **STAR Efficacy**: Measures standard Situation-Task-Action-Result quantification.
+    """)
 
-# Main Content
-st.title("🚀 Professional CV Optimizer")
-st.subheader("Get hired by transforming your CV into a recruiter magnet.")
+# Custom Page Header
+st.markdown("""
+    <div class="header-container">
+        <h1 class="header-title">🚀 Professional CV Optimizer</h1>
+        <p class="header-subtitle">Maximize your hiring rate with deep AI-driven ATS, formatting, and impact evaluation.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
+# Application Input Layout
 col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
-    st.markdown("### 1. Job Opportunity")
-    job_desc = st.text_area("Paste the Job Description:", height=300, placeholder="Copy the job requirements and responsibilities here...")
+    st.markdown("### 1. Job Details")
+    st.session_state["job_desc"] = st.text_area(
+        "Paste the Target Job Description:",
+        value=st.session_state["job_desc"],
+        height=300,
+        placeholder="Copy and paste the job duties, requirements, and responsibilities here..."
+    )
 
 with col2:
-    st.markdown("### 2. Your CV")
-    uploaded_file = st.file_uploader("Upload your CV (PDF):", type="pdf")
+    st.markdown("### 2. Your Document")
+    uploaded_file = st.file_uploader("Upload your CV (PDF format):", type="pdf")
     if uploaded_file:
-        st.success(f"File '{uploaded_file.name}' uploaded successfully!")
+        st.success(f"File '{uploaded_file.name}' successfully loaded!")
 
 st.divider()
 
+# Analyze action execution
 if st.button("Generate Comprehensive Analysis"):
-    if not job_desc or not uploaded_file:
-        st.warning("Please provide both a Job Description and a CV.")
-    elif not api_key:
-        st.error("Missing Gemini API Key. Please configure it in the sidebar.")
+    if not st.session_state["job_desc"] or not uploaded_file:
+        st.warning("Please upload a CV and paste the target job description to run analysis.")
+    elif not st.session_state["api_key"]:
+        st.error("Missing Gemini API Key. Configure the key in the settings sidebar.")
     else:
-        with st.spinner("AI is analyzing your professional profile..."):
+        with st.spinner("Analyzing professional profile metrics..."):
             cv_text = extract_text_from_pdf(uploaded_file)
             if cv_text.strip():
-                analysis = analyze_cv(cv_text, job_desc)
-                
-                if analysis:
+                analysis_results = analyze_cv(cv_text, st.session_state["job_desc"])
+                if analysis_results:
+                    st.session_state["analysis"] = analysis_results
                     st.balloons()
-                    fig = go.Figure(go.Indicator(
-                        mode = "gauge+number",
-                        value = analysis['match_score'],
-                        domain = {'x': [0, 1], 'y': [0, 1]},
-                        title = {'text': "Match Score", 'font': {'size': 24}},
-                        gauge = {
-                            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                            'bar': {'color': "#007bff"},
-                            'bgcolor': "white",
-                            'borderwidth': 2,
-                            'bordercolor': "gray",
-                            'steps': [
-                                {'range': [0, 50], 'color': '#ffcccc'},
-                                {'range': [50, 80], 'color': '#fff3cd'},
-                                {'range': [80, 100], 'color': '#d4edda'}],
-                            'threshold': {
-                                'line': {'color': "red", 'width': 4},
-                                'thickness': 0.75,
-                                'value': 90}}))
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-
-                    st.markdown(f"### 📝 Executive Summary")
-                    st.info(analysis['summary'])
-
-                    res_col1, res_col2 = st.columns(2)
-                    with res_col1:
-                        st.markdown("#### ✅ Top Strengths")
-                        for s in analysis['top_strengths']:
-                            st.write(f"- {s}")
-                    
-                    with res_col2:
-                        st.markdown("#### ❌ Missing Keywords")
-                        if analysis['missing_keywords']:
-                            st.error(", ".join(analysis['missing_keywords']))
-                        else:
-                            st.success("No critical keywords missing!")
-
-                    st.divider()
-
-                    with st.expander("📊 Detailed ATS & Formatting Evaluation", expanded=True):
-                        e_col1, e_col2 = st.columns(2)
-                        e_col1.metric("Formatting Score", f"{analysis['formatting_score']}%")
-                        e_col2.write(f"**ATS Compatibility:** {analysis['ats_compatibility']}")
-                        st.write(f"**Formatting Feedback:** {analysis['formatting_feedback']}")
-                    
-                    with st.expander("✨ STAR Method & Impact Analysis", expanded=False):
-                        st.write(analysis['star_method_evaluation'])
-
-                    with st.expander("💡 Improvement Roadmap", expanded=True):
-                        for suggestion in analysis['improvement_suggestions']:
-                            st.write(f"🔹 {suggestion}")
-
-                    pdf_data = create_pdf_report(analysis)
-                    st.download_button(
-                        label="📥 Download PDF Report",
-                        data=pdf_data,
-                        file_name="CV_Analysis_Report.pdf",
-                        mime="application/pdf",
-                    )
             else:
-                st.error("Could not read text from the CV. Is it an image-based PDF?")
+                st.error("Could not extract readable text from the uploaded PDF document. Please verify standard file encoding.")
+
+# Persist and display dashboard contents
+if st.session_state["analysis"]:
+    analysis = st.session_state["analysis"]
+    
+    # 2 Column layout: Gauge Match Chart and Executive Summary
+    res_col1, res_col2 = st.columns([1, 2], gap="medium")
+    
+    with res_col1:
+        # Gauge Plotly Chart
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = analysis['match_score'],
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': "Match Score", 'font': {'size': 20, 'weight': 'bold'}},
+            gauge = {
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#475569"},
+                'bar': {'color': "#4f46e5"},
+                'bgcolor': "white",
+                'borderwidth': 1,
+                'bordercolor': "#cbd5e1",
+                'steps': [
+                    {'range': [0, 50], 'color': '#fee2e2'},
+                    {'range': [50, 80], 'color': '#fef3c7'},
+                    {'range': [80, 100], 'color': '#dcfce7'}],
+                'threshold': {
+                    'line': {'color': "#10b981", 'width': 4},
+                    'thickness': 0.75,
+                    'value': 85}}))
+        
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font={'color': "#0f172a", 'family': "Inter, sans-serif"},
+            margin=dict(t=40, b=10, l=30, r=30),
+            height=280
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    with res_col2:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("#### 📝 Executive Summary")
+        st.write(analysis['summary'])
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.divider()
+
+    # Detailed Analysis Tab Interface
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🎯 Profile Strengths & Keywords",
+        "📋 ATS & Formatting Check",
+        "💡 Improvement Roadmap",
+        "📥 Export PDF Report"
+    ])
+    
+    with tab1:
+        col_str, col_key = st.columns(2)
+        with col_str:
+            st.markdown("#### ✅ Top Core Strengths")
+            for strength in analysis['top_strengths']:
+                st.markdown(f"<div class='strength-item'>{strength}</div>", unsafe_allow_html=True)
+                
+        with col_key:
+            st.markdown("#### ❌ Missing Keywords & Gaps")
+            if analysis['missing_keywords']:
+                st.write("Incorporate these missing keywords into your CV content to pass keyword filters:")
+                for keyword in analysis['missing_keywords']:
+                    st.markdown(f"<span class='keyword-item'>{keyword}</span>", unsafe_allow_html=True)
+            else:
+                st.success("Awesome! No critical keywords missing from your CV profile.")
+                
+    with tab2:
+        col_ats, col_star = st.columns(2)
+        with col_ats:
+            st.markdown("#### 📊 ATS Formatting Review")
+            st.metric("Structure Score", f"{analysis['formatting_score']}%")
+            st.markdown(f"**ATS Compatibility:** {analysis['ats_compatibility']}")
+            st.markdown(f"**Structuring Recommendations:** {analysis['formatting_feedback']}")
+            
+        with col_star:
+            st.markdown("#### ✨ STAR Method Efficacy")
+            st.write("Evaluating if experience bullets quantify achievements using Situation-Task-Action-Result format:")
+            st.info(analysis['star_method_evaluation'])
+            
+    with tab3:
+        st.markdown("#### 🛠 Actionable Profile Roadmap")
+        st.write("Apply these specific step-by-step suggestions to enhance the impact and clarity of your CV:")
+        for suggestion in analysis['improvement_suggestions']:
+            st.markdown(f"<div class='roadmap-item'>• {suggestion}</div>", unsafe_allow_html=True)
+            
+    with tab4:
+        st.markdown("#### 📥 Download Official Optimization Report")
+        st.write("Generate a professionally structured, printable PDF report. This report handles text wrapping cleanly and can be shared offline.")
+        
+        pdf_data = create_pdf_report(analysis)
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=pdf_data,
+            file_name="CV_Optimization_Report.pdf",
+            mime="application/pdf",
+        )
