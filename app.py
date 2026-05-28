@@ -33,6 +33,12 @@ if "analysis" not in st.session_state:
 if "job_desc" not in st.session_state:
     st.session_state["job_desc"] = ""
 
+if "tailored_cv" not in st.session_state:
+    st.session_state["tailored_cv"] = None
+
+if "cv_text" not in st.session_state:
+    st.session_state["cv_text"] = ""
+
 # Custom Premium CSS Styling
 st.markdown("""
     <style>
@@ -242,15 +248,20 @@ def clean_json_response(json_text):
     return json.loads(json_text.strip())
 
 
+def get_genai_client():
+    """Creates a client instance using the session API key."""
+    if st.session_state["api_key"]:
+        return genai.Client(api_key=st.session_state["api_key"])
+    return None
+
+
 def analyze_cv(cv_text, job_description):
     """Analyzes the CV against the job description using Gemini with the new google-genai SDK."""
-    if not st.session_state["api_key"]:
+    client = get_genai_client()
+    if not client:
         return None
 
     try:
-        # Initialize client with current key
-        client = genai.Client(api_key=st.session_state["api_key"])
-        
         prompt = f"""
         You are an expert HR Recruiter and Career Coach specializing in ATS (Applicant Tracking Systems) and candidate evaluation.
         Analyze the following CV against the provided Job Description and return your analysis in JSON format.
@@ -286,6 +297,42 @@ def analyze_cv(cv_text, job_description):
         return clean_json_response(response.text)
     except Exception as e:
         st.error(f"Error during AI analysis: {str(e)}")
+        return None
+
+
+def tailor_cv(cv_text, job_description):
+    """Generates a tailored version of the CV matching the Job Description using Gemini."""
+    client = get_genai_client()
+    if not client:
+        return None
+
+    try:
+        prompt = f"""
+        You are an expert resume writer and career consultant.
+        Your task is to rewrite and tailor the candidate's CV to match the target Job Description as closely as possible.
+        
+        Original CV Content:
+        {cv_text}
+
+        Target Job Description:
+        {job_description}
+
+        Follow these strict guidelines:
+        1. **Do NOT Fabricate Information**: Do not add degrees, companies, projects, or work experiences that are not present in the original CV. You may, however, rephrase, expand, or highlight existing experience to match job requirements.
+        2. **Optimize Keywords**: Seamlessly integrate relevant keywords from the job description into the tailored CV's skills and experience sections.
+        3. **Apply the STAR Method**: Rewrite professional experience bullet points to emphasize action verbs, situation, task, and measurable results (quantified where possible).
+        4. **Clean Markdown Format**: Return the tailored CV formatted cleanly in Markdown, using clear sections (e.g., Summary, Professional Experience, Skills, Education).
+        
+        Produce only the tailored CV in markdown format without any conversational intro/outro.
+        """
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        return response.text
+    except Exception as e:
+        st.error(f"Error tailoring CV: {str(e)}")
         return None
 
 
@@ -479,6 +526,8 @@ if st.button("Generate Comprehensive Analysis"):
         with st.spinner("Analyzing professional profile metrics..."):
             cv_text = extract_text_from_pdf(uploaded_file)
             if cv_text.strip():
+                st.session_state["cv_text"] = cv_text
+                st.session_state["tailored_cv"] = None  # Reset tailoring draft
                 analysis_results = analyze_cv(cv_text, st.session_state["job_desc"])
                 if analysis_results:
                     st.session_state["analysis"] = analysis_results
@@ -533,10 +582,11 @@ if st.session_state["analysis"]:
     st.divider()
 
     # Detailed Analysis Tab Interface
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "🎯 Profile Strengths & Keywords",
         "📋 ATS & Formatting Check",
         "💡 Improvement Roadmap",
+        "✨ Tailored CV Editor",
         "📥 Export PDF Report"
     ])
     
@@ -576,6 +626,49 @@ if st.session_state["analysis"]:
             st.markdown(f"<div class='roadmap-item'>• {suggestion}</div>", unsafe_allow_html=True)
             
     with tab4:
+        st.markdown("#### ✨ AI-Tailored CV Editor")
+        st.write("Generate a professionally tailored and job-optimized draft of your CV. This applies the AI's suggestions and structures bullets using the STAR method without fabricating any data.")
+        
+        if not st.session_state["tailored_cv"]:
+            if st.button("Generate Tailored CV Draft"):
+                with st.spinner("AI is crafting your tailored CV..."):
+                    tailored = tailor_cv(st.session_state["cv_text"], st.session_state["job_desc"])
+                    if tailored:
+                        st.session_state["tailored_cv"] = tailored
+                        st.rerun()
+        else:
+            edited_cv = st.text_area(
+                "Review & Edit your tailored CV (Markdown format):",
+                value=st.session_state["tailored_cv"],
+                height=500
+            )
+            
+            if edited_cv != st.session_state["tailored_cv"]:
+                st.session_state["tailored_cv"] = edited_cv
+                
+            st.divider()
+            
+            exp_col1, exp_col2, exp_col3 = st.columns([1, 1, 2])
+            with exp_col1:
+                st.download_button(
+                    label="📥 Download as Markdown (.md)",
+                    data=st.session_state["tailored_cv"],
+                    file_name="Tailored_CV.md",
+                    mime="text/markdown"
+                )
+            with exp_col2:
+                st.download_button(
+                    label="📥 Download as Text (.txt)",
+                    data=st.session_state["tailored_cv"],
+                    file_name="Tailored_CV.txt",
+                    mime="text/plain"
+                )
+            with exp_col3:
+                if st.button("🔄 Regenerate Tailored CV Draft"):
+                    st.session_state["tailored_cv"] = None
+                    st.rerun()
+
+    with tab5:
         st.markdown("#### 📥 Download Official Optimization Report")
         st.write("Generate a professionally structured, printable PDF report. This report handles text wrapping cleanly and can be shared offline.")
         
