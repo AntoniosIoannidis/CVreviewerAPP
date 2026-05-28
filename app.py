@@ -42,181 +42,457 @@ if "cv_text" not in st.session_state:
 # Custom Premium CSS Styling
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
-    /* Global theme settings */
     html, body, [data-testid="stAppViewContainer"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #f8fafc;
-        color: #0f172a;
+        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+        background: radial-gradient(circle at 50% 0%, #17153b 0%, #0c0a1a 50%, #030008 100%) !important;
+        color: #f8fafc !important;
     }
-    
-    /* Header layout styling */
+
+    /* Header Container */
     .header-container {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
-        padding: 2.5rem 2rem;
-        border-radius: 16px;
-        color: white;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%);
+        padding: 3rem 2.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        margin-bottom: 2.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        overflow: hidden;
     }
-    
-    .header-title {
-        font-size: 2.3rem;
+
+    .header-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .header-tag {
+        display: inline-block;
+        padding: 6px 12px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 100px;
+        font-size: 0.75rem;
         font-weight: 700;
-        margin: 0;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.025em;
-        background: linear-gradient(to right, #ffffff, #c7d2fe);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.05em;
+        color: #c7d2fe;
+        margin-bottom: 1.25rem;
     }
-    
+
+    .header-title {
+        font-size: 2.75rem !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        margin-bottom: 0.75rem !important;
+        letter-spacing: -0.03em !important;
+        background: linear-gradient(135deg, #ffffff 30%, #c7d2fe 70%, #a855f7 100%);
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        line-height: 1.2 !important;
+    }
+
     .header-subtitle {
-        font-size: 1.05rem;
-        color: #e0e7ff;
-        font-weight: 400;
-        margin: 0;
+        font-size: 1.15rem !important;
+        color: #94a3b8 !important;
+        font-weight: 400 !important;
+        margin: 0 !important;
+        max-width: 800px;
+        line-height: 1.6 !important;
     }
-    
-    /* Sidebar customization */
+
+    /* Sidebar Customization */
     [data-testid="stSidebar"] {
-        background-color: #0f172a !important;
-        border-right: 1px solid #1e293b;
+        background-color: #06040c !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
     }
-    
+
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] label {
         color: #f8fafc !important;
     }
-    
+
     /* Primary buttons styling */
     div.stButton > button:first-child {
-        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-        color: white;
-        font-weight: 600;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.2s ease-in-out;
-        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-        width: 100%;
-        height: auto;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        border: none !important;
+        padding: 0.85rem 2rem !important;
+        border-radius: 12px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35) !important;
+        width: 100% !important;
+        height: auto !important;
+        font-size: 1.05rem !important;
+        letter-spacing: -0.01em !important;
     }
-    
+
     div.stButton > button:first-child:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
-        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
-        border: none;
-        color: white;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 10px 30px rgba(168, 85, 247, 0.5) !important;
+        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important;
+        color: white !important;
     }
-    
+
     div.stButton > button:first-child:active {
-        transform: translateY(1px);
+        transform: translateY(1px) !important;
     }
-    
-    /* Export and Download buttons */
+
+    /* Download buttons */
     div.stDownloadButton > button:first-child {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        color: white;
-        font-weight: 600;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.2s ease-in-out;
-        box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
-        width: 100%;
-        height: auto;
+        background: linear-gradient(135deg, #06b6d4 0%, #0d9488 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        border: none !important;
+        padding: 0.85rem 2rem !important;
+        border-radius: 12px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 20px rgba(6, 182, 212, 0.25) !important;
+        width: 100% !important;
+        height: auto !important;
+        font-size: 1.05rem !important;
     }
-    
+
     div.stDownloadButton > button:first-child:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
-        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-        border: none;
-        color: white;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 10px 30px rgba(13, 148, 136, 0.4) !important;
+        background: linear-gradient(135deg, #0891b2 0%, #0f766e 100%) !important;
+        color: white !important;
     }
-    
+
     /* UI Cards container */
     .card {
-        background-color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-        border: 1px solid #e2e8f0;
-        margin-bottom: 1.5rem;
+        background: rgba(15, 23, 42, 0.55) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        padding: 2rem !important;
+        border-radius: 18px !important;
+        border: 1px solid rgba(99, 102, 241, 0.15) !important;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25) !important;
+        margin-bottom: 2rem !important;
+        transition: all 0.3s ease !important;
     }
-    
+
+    .card:hover {
+        transform: translateY(-4px) !important;
+        border-color: rgba(168, 85, 247, 0.3) !important;
+        box-shadow: 0 20px 40px rgba(168, 85, 247, 0.08), 0 12px 36px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .executive-summary-card {
+        border-left: 5px solid #a855f7 !important;
+    }
+
     .card-title {
-        font-weight: 600;
-        font-size: 1.15rem;
-        color: #1e293b;
-        margin-bottom: 0.75rem;
+        font-weight: 700 !important;
+        font-size: 1.35rem !important;
+        color: #ffffff !important;
+        margin-bottom: 1rem !important;
+        letter-spacing: -0.02em !important;
     }
-    
-    /* Custom tabs design */
+
+    .card-header-icon {
+        font-size: 1.75rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .card-body-text {
+        font-size: 1.05rem !important;
+        color: #cbd5e1 !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Inputs override */
+    div[data-testid="stTextArea"] textarea {
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        color: #f8fafc !important;
+        border: 1px solid rgba(99, 102, 241, 0.2) !important;
+        border-radius: 12px !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 0.95rem !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    div[data-testid="stTextArea"] textarea:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+    }
+
+    div[data-testid="stFileUploader"] section {
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        border: 1px dashed rgba(99, 102, 241, 0.3) !important;
+        border-radius: 12px !important;
+        color: #f8fafc !important;
+        transition: all 0.2s ease-in-out !important;
+        padding: 2rem !important;
+    }
+
+    div[data-testid="stFileUploader"] section:hover {
+        border-color: #a855f7 !important;
+        background-color: rgba(15, 23, 42, 0.8) !important;
+    }
+
+    div[data-testid="stFileUploader"] section [data-testid="stMarkdownContainer"] p {
+        color: #cbd5e1 !important;
+    }
+
+    /* Tabs override */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #e2e8f0;
-        padding: 6px;
-        border-radius: 10px;
+        gap: 10px !important;
+        background-color: rgba(15, 23, 42, 0.65) !important;
+        padding: 8px !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        margin-bottom: 2rem !important;
     }
-    
+
     .stTabs [data-baseweb="tab"] {
-        height: 42px;
-        white-space: pre;
-        background-color: transparent;
-        border-radius: 8px;
-        color: #475569;
-        font-weight: 500;
-        transition: all 0.2s;
-        border: none;
-        padding: 0 20px;
+        height: 46px !important;
+        background-color: transparent !important;
+        border-radius: 10px !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border: none !important;
+        padding: 0 24px !important;
     }
-    
+
     .stTabs [data-baseweb="tab"]:hover {
-        color: #0f172a;
-        background-color: rgba(255, 255, 255, 0.5);
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.04) !important;
     }
-    
+
     .stTabs [aria-selected="true"] {
-        background-color: white !important;
-        color: #4f46e5 !important;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
-        font-weight: 600;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%) !important;
+        color: #c7d2fe !important;
+        border: 1px solid rgba(99, 102, 241, 0.3) !important;
+        box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.15) !important;
+        font-weight: 700 !important;
     }
-    
-    /* Feedback highlights styling */
-    .strength-item {
-        padding: 10px 14px;
-        background-color: #f0fdf4;
-        border-left: 4px solid #10b981;
-        border-radius: 0 8px 8px 0;
-        margin-bottom: 8px;
-        font-size: 0.95rem;
-        color: #14532d;
+
+    /* Metric styling */
+    .metric-card {
+        background: rgba(15, 23, 42, 0.5) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(99, 102, 241, 0.15) !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
     }
-    
-    .keyword-item {
-        display: inline-block;
-        padding: 6px 12px;
-        background-color: #fef2f2;
-        border: 1px solid #fee2e2;
-        border-radius: 100px;
-        margin: 4px;
+
+    .metric-label {
+        font-size: 0.85rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #94a3b8 !important;
+        margin-bottom: 0.5rem !important;
+        font-weight: 700 !important;
+    }
+
+    .metric-value {
+        font-size: 2.75rem !important;
+        font-weight: 800 !important;
+        background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        margin-bottom: 0.75rem !important;
+        line-height: 1.1 !important;
+    }
+
+    .metric-status {
+        color: #e2e8f0 !important;
+        font-size: 0.95rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .metric-desc {
+        color: #cbd5e1 !important;
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding-top: 0.75rem !important;
+        margin-top: 0.75rem !important;
+    }
+
+    /* Strengths Container */
+    .strengths-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .strength-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 1.15rem 1.4rem;
+        background: rgba(16, 185, 129, 0.05) !important;
+        border: 1px solid rgba(16, 185, 129, 0.25) !important;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .strength-card:hover {
+        background: rgba(16, 185, 129, 0.08) !important;
+        transform: translateX(4px);
+        border-color: rgba(16, 185, 129, 0.4) !important;
+    }
+
+    .strength-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #10b981;
+        color: #030712;
         font-size: 0.85rem;
-        color: #991b1b;
+        font-weight: 800;
+    }
+
+    .strength-text {
+        font-size: 1rem;
+        color: #dcfce7;
         font-weight: 500;
     }
-    
-    .roadmap-item {
-        padding: 10px 14px;
-        background-color: #f0f9ff;
-        border-left: 4px solid #0284c7;
-        border-radius: 0 8px 8px 0;
-        margin-bottom: 8px;
+
+    /* Keywords Pill Section */
+    .keywords-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .keyword-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(239, 68, 68, 0.05) !important;
+        border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        border-radius: 100px;
+        font-size: 0.9rem;
+        color: #fecdd3;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .keyword-badge:hover {
+        background: rgba(239, 68, 68, 0.1) !important;
+        border-color: rgba(239, 68, 68, 0.45) !important;
+        transform: scale(1.03);
+    }
+
+    .keyword-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+    }
+
+    /* STAR Efficacy Card */
+    .star-card {
+        background: rgba(15, 23, 42, 0.5) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(168, 85, 247, 0.2) !important;
+        padding: 1.5rem !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .star-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 4px 8px;
+        background: rgba(168, 85, 247, 0.15) !important;
+        border: 1px solid rgba(168, 85, 247, 0.3) !important;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #e9d5ff;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .star-content {
+        font-size: 1rem !important;
+        color: #e2e8f0 !important;
+        line-height: 1.6 !important;
+        padding-top: 1.5rem !important;
+    }
+
+    /* Roadmap Grid */
+    .roadmap-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .roadmap-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 1.25rem 1.5rem;
+        background: rgba(30, 41, 59, 0.3) !important;
+        border: 1px solid rgba(99, 102, 241, 0.15) !important;
+        border-radius: 14px;
+        transition: all 0.25s ease;
+    }
+
+    .roadmap-card:hover {
+        background: rgba(30, 41, 59, 0.5) !important;
+        border-color: rgba(99, 102, 241, 0.45) !important;
+        transform: translateX(6px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .roadmap-number-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        border-radius: 50%;
+        color: #ffffff;
+        font-weight: 800;
         font-size: 0.95rem;
-        color: #0c4a6e;
+        box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+    }
+
+    .roadmap-text {
+        font-size: 1rem;
+        color: #cbd5e1;
+        line-height: 1.5;
+        font-weight: 500;
+        padding-top: 2px;
+    }
+
+    /* Sidebar lists & divider */
+    .stDivider {
+        margin: 2.5rem 0 !important;
+    }
+
+    hr {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Typography styles inside blocks */
+    h4 {
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        color: #ffffff !important;
+        margin-bottom: 1.25rem !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -256,7 +532,7 @@ def get_genai_client():
 
 
 def analyze_cv(cv_text, job_description):
-    """Analyzes the CV against the job description using Gemini with the new google-genai SDK."""
+    """Analyzes the CV against the job description using Gemini with automatic model fallback."""
     client = get_genai_client()
     if not client:
         return None
@@ -286,22 +562,37 @@ def analyze_cv(cv_text, job_description):
         Ensure all keys exist and values match the requested formats.
         """
 
-        # Generate content using modern gemini-2.5-flash
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
+        # Try primary model: gemini-2.5-flash
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
             )
-        )
-        return clean_json_response(response.text)
+            return clean_json_response(response.text)
+        except Exception as primary_err:
+            err_str = str(primary_err)
+            if "503" in err_str or "UNAVAILABLE" in err_str or "ResourceExhausted" in err_str or "429" in err_str:
+                st.info("⚠️ Primary model (gemini-2.5-flash) is currently busy. Switching seamlessly to highly reliable fallback model (gemini-1.5-flash)...")
+                response = client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                )
+                return clean_json_response(response.text)
+            else:
+                raise primary_err
     except Exception as e:
         st.error(f"Error during AI analysis: {str(e)}")
         return None
 
 
 def tailor_cv(cv_text, job_description):
-    """Generates a tailored version of the CV matching the Job Description using Gemini."""
+    """Generates a tailored version of the CV matching the Job Description with automatic model fallback."""
     client = get_genai_client()
     if not client:
         return None
@@ -326,11 +617,24 @@ def tailor_cv(cv_text, job_description):
         Produce only the tailored CV in markdown format without any conversational intro/outro.
         """
 
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
-        return response.text
+        # Try primary model: gemini-2.5-flash
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            return response.text
+        except Exception as primary_err:
+            err_str = str(primary_err)
+            if "503" in err_str or "UNAVAILABLE" in err_str or "ResourceExhausted" in err_str or "429" in err_str:
+                st.info("⚠️ Primary model (gemini-2.5-flash) is currently busy. Switching seamlessly to highly reliable fallback model (gemini-1.5-flash)...")
+                response = client.models.generate_content(
+                    model='gemini-1.5-flash',
+                    contents=prompt,
+                )
+                return response.text
+            else:
+                raise primary_err
     except Exception as e:
         st.error(f"Error tailoring CV: {str(e)}")
         return None
@@ -491,8 +795,9 @@ with st.sidebar:
 # Custom Page Header
 st.markdown("""
     <div class="header-container">
-        <h1 class="header-title">🚀 Professional CV Optimizer</h1>
-        <p class="header-subtitle">Maximize your hiring rate with deep AI-driven ATS, formatting, and impact evaluation.</p>
+        <div class="header-tag">✨ POWERED BY GEMINI 2.5 FLASH</div>
+        <h1 class="header-title">Professional CV Optimizer</h1>
+        <p class="header-subtitle">Elevate your application with institutional-grade ATS parsing, semantic keyword intelligence, and STAR impact quantification.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -548,17 +853,17 @@ if st.session_state["analysis"]:
             mode = "gauge+number",
             value = analysis['match_score'],
             domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Match Score", 'font': {'size': 20, 'weight': 'bold'}},
+            title = {'text': "Match Score", 'font': {'size': 20, 'weight': 'bold', 'color': '#ffffff'}},
             gauge = {
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#475569"},
-                'bar': {'color': "#4f46e5"},
-                'bgcolor': "white",
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#94a3b8"},
+                'bar': {'color': "#818cf8"},
+                'bgcolor': "rgba(15, 23, 42, 0.4)",
                 'borderwidth': 1,
-                'bordercolor': "#cbd5e1",
+                'bordercolor': "rgba(99, 102, 241, 0.2)",
                 'steps': [
-                    {'range': [0, 50], 'color': '#fee2e2'},
-                    {'range': [50, 80], 'color': '#fef3c7'},
-                    {'range': [80, 100], 'color': '#dcfce7'}],
+                    {'range': [0, 50], 'color': 'rgba(239, 68, 68, 0.15)'},
+                    {'range': [50, 80], 'color': 'rgba(245, 158, 11, 0.15)'},
+                    {'range': [80, 100], 'color': 'rgba(16, 185, 129, 0.15)'}],
                 'threshold': {
                     'line': {'color': "#10b981", 'width': 4},
                     'thickness': 0.75,
@@ -567,17 +872,20 @@ if st.session_state["analysis"]:
         fig.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font={'color': "#0f172a", 'family': "Inter, sans-serif"},
+            font={'color': "#f8fafc", 'family': "'Plus Jakarta Sans', 'Inter', sans-serif"},
             margin=dict(t=40, b=10, l=30, r=30),
             height=280
         )
         st.plotly_chart(fig, use_container_width=True)
 
     with res_col2:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("#### 📝 Executive Summary")
-        st.write(analysis['summary'])
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class='card executive-summary-card'>
+            <div class='card-header-icon'>📝</div>
+            <div class='card-title'>Executive Summary</div>
+            <div class='card-body-text'>{analysis['summary']}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.divider()
 
@@ -594,15 +902,31 @@ if st.session_state["analysis"]:
         col_str, col_key = st.columns(2)
         with col_str:
             st.markdown("#### ✅ Top Core Strengths")
+            strengths_html = "<div class='strengths-container'>"
             for strength in analysis['top_strengths']:
-                st.markdown(f"<div class='strength-item'>{strength}</div>", unsafe_allow_html=True)
+                strengths_html += f"""
+                <div class='strength-card'>
+                    <div class='strength-icon'>✓</div>
+                    <div class='strength-text'>{strength}</div>
+                </div>
+                """
+            strengths_html += "</div>"
+            st.markdown(strengths_html, unsafe_allow_html=True)
                 
         with col_key:
             st.markdown("#### ❌ Missing Keywords & Gaps")
             if analysis['missing_keywords']:
-                st.write("Incorporate these missing keywords into your CV content to pass keyword filters:")
+                st.markdown("<p style='color: #cbd5e1; margin-bottom: 12px;'>Incorporate these critical keywords into your CV content to bypass semantic ATS filter thresholds:</p>", unsafe_allow_html=True)
+                keywords_html = "<div class='keywords-container'>"
                 for keyword in analysis['missing_keywords']:
-                    st.markdown(f"<span class='keyword-item'>{keyword}</span>", unsafe_allow_html=True)
+                    keywords_html += f"""
+                    <span class='keyword-badge'>
+                        <span class='keyword-dot'></span>
+                        {keyword}
+                    </span>
+                    """
+                keywords_html += "</div>"
+                st.markdown(keywords_html, unsafe_allow_html=True)
             else:
                 st.success("Awesome! No critical keywords missing from your CV profile.")
                 
@@ -610,20 +934,37 @@ if st.session_state["analysis"]:
         col_ats, col_star = st.columns(2)
         with col_ats:
             st.markdown("#### 📊 ATS Formatting Review")
-            st.metric("Structure Score", f"{analysis['formatting_score']}%")
-            st.markdown(f"**ATS Compatibility:** {analysis['ats_compatibility']}")
-            st.markdown(f"**Structuring Recommendations:** {analysis['formatting_feedback']}")
+            st.markdown(f"""
+            <div class='metric-card'>
+                <div class='metric-label'>Structure & Parsability Score</div>
+                <div class='metric-value'>{analysis['formatting_score']}%</div>
+                <div class='metric-status'><b>ATS Compatibility:</b> {analysis['ats_compatibility']}</div>
+                <div class='metric-desc'><b>Formatting Feedback:</b> {analysis['formatting_feedback']}</div>
+            </div>
+            """, unsafe_allow_html=True)
             
         with col_star:
             st.markdown("#### ✨ STAR Method Efficacy")
-            st.write("Evaluating if experience bullets quantify achievements using Situation-Task-Action-Result format:")
-            st.info(analysis['star_method_evaluation'])
+            st.markdown(f"""
+            <div class='star-card'>
+                <div class='star-badge'>AI Evaluation</div>
+                <div class='star-content'>{analysis['star_method_evaluation']}</div>
+            </div>
+            """, unsafe_allow_html=True)
             
     with tab3:
         st.markdown("#### 🛠 Actionable Profile Roadmap")
-        st.write("Apply these specific step-by-step suggestions to enhance the impact and clarity of your CV:")
-        for suggestion in analysis['improvement_suggestions']:
-            st.markdown(f"<div class='roadmap-item'>• {suggestion}</div>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #cbd5e1; margin-bottom: 16px;'>Apply these sequential recommendations to strategically optimize candidate fit and human readability:</p>", unsafe_allow_html=True)
+        roadmap_html = "<div class='roadmap-container'>"
+        for idx, suggestion in enumerate(analysis['improvement_suggestions']):
+            roadmap_html += f"""
+            <div class='roadmap-card'>
+                <div class='roadmap-number-badge'>{idx + 1}</div>
+                <div class='roadmap-text'>{suggestion}</div>
+            </div>
+            """
+        roadmap_html += "</div>"
+        st.markdown(roadmap_html, unsafe_allow_html=True)
             
     with tab4:
         st.markdown("#### ✨ AI-Tailored CV Editor")
