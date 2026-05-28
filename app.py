@@ -1,6 +1,7 @@
 import streamlit as st
 import pdfplumber
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import json
 import plotly.graph_objects as go
@@ -31,10 +32,6 @@ if "analysis" not in st.session_state:
 
 if "job_desc" not in st.session_state:
     st.session_state["job_desc"] = ""
-
-# Configure Gemini API if key is present
-if st.session_state["api_key"]:
-    genai.configure(api_key=st.session_state["api_key"])
 
 # Custom Premium CSS Styling
 st.markdown("""
@@ -246,42 +243,46 @@ def clean_json_response(json_text):
 
 
 def analyze_cv(cv_text, job_description):
-    """Analyzes the CV against the job description using Gemini with native JSON mode."""
+    """Analyzes the CV against the job description using Gemini with the new google-genai SDK."""
     if not st.session_state["api_key"]:
         return None
 
-    # Native structured JSON mode configuration
-    model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash',
-        generation_config={"response_mime_type": "application/json"}
-    )
-
-    prompt = f"""
-    You are an expert HR Recruiter and Career Coach specializing in ATS (Applicant Tracking Systems) and candidate evaluation.
-    Analyze the following CV against the provided Job Description and return your analysis in JSON format.
-
-    CV Content:
-    {cv_text}
-
-    Job Description:
-    {job_description}
-
-    The JSON response must have exactly these keys and types:
-    1. "match_score": (integer between 0 and 100)
-    2. "missing_keywords": (list of strings)
-    3. "formatting_score": (integer between 0 and 100)
-    4. "formatting_feedback": (string)
-    5. "star_method_evaluation": (string)
-    6. "ats_compatibility": (string)
-    7. "top_strengths": (list of strings, max 3)
-    8. "improvement_suggestions": (list of strings)
-    9. "summary": (string, brief 2-sentence summary)
-
-    Ensure all keys exist and values match the requested formats.
-    """
-
     try:
-        response = model.generate_content(prompt)
+        # Initialize client with current key
+        client = genai.Client(api_key=st.session_state["api_key"])
+        
+        prompt = f"""
+        You are an expert HR Recruiter and Career Coach specializing in ATS (Applicant Tracking Systems) and candidate evaluation.
+        Analyze the following CV against the provided Job Description and return your analysis in JSON format.
+
+        CV Content:
+        {cv_text}
+
+        Job Description:
+        {job_description}
+
+        The JSON response must have exactly these keys and types:
+        1. "match_score": (integer between 0 and 100)
+        2. "missing_keywords": (list of strings)
+        3. "formatting_score": (integer between 0 and 100)
+        4. "formatting_feedback": (string)
+        5. "star_method_evaluation": (string)
+        6. "ats_compatibility": (string)
+        7. "top_strengths": (list of strings, max 3)
+        8. "improvement_suggestions": (list of strings)
+        9. "summary": (string, brief 2-sentence summary)
+
+        Ensure all keys exist and values match the requested formats.
+        """
+
+        # Generate content using modern gemini-2.5-flash
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
+        )
         return clean_json_response(response.text)
     except Exception as e:
         st.error(f"Error during AI analysis: {str(e)}")
@@ -430,7 +431,6 @@ with st.sidebar:
         user_key = st.text_input("Gemini API Key:", value=st.session_state["api_key"], type="password", help="Configure your Gemini API key here")
         if user_key and user_key != st.session_state["api_key"]:
             st.session_state["api_key"] = user_key
-            genai.configure(api_key=user_key)
             st.success("API Key updated for session!")
 
     st.divider()

@@ -24,8 +24,10 @@ We updated the core application file: [app.py](file:///D:/App/CVreviewerAPP/app.
 - **Problem**: In the previous version, whenever a user clicked the "Download PDF Report" button or interacted with the sidebar settings, Streamlit re-ran the script and deleted the current evaluation results.
 - **Solution**: Integrated `st.session_state` to store `analysis` and `job_desc`. The evaluation results are now cached in memory and persist throughout the user's session until a new analysis is triggered.
 
-### 3. Native Structured JSON mode (Security & Robustness)
-- Configured the Gemini model with `generation_config={"response_mime_type": "application/json"}`.
+### 3. Native Structured JSON mode & Unified google-genai SDK
+- Upgraded from the deprecated legacy `google-generativeai` client to the **new unified `google-genai` SDK**.
+- Switched to the modern **`gemini-2.5-flash`** model.
+- Configured the API call using `GenerateContentConfig(response_mime_type="application/json")`.
 - This guarantees the AI response is valid, parseable JSON and conforms to the key-value schema, completely preventing application crashes from unexpected formatting.
 - Added a robust JSON cleaner wrapper to handle any minor block formatting variations.
 
@@ -47,4 +49,4 @@ We updated the core application file: [app.py](file:///D:/App/CVreviewerAPP/app.
    ```bash
    python -m streamlit run app.py
    ```
-3. **Dependencies**: Already verified and installed.
+3. **Dependencies**: Already verified and installed (`google-genai`).

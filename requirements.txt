@@ -1,6 +1,6 @@
 streamlit
 pdfplumber
-google-generativeai
+google-genai
 python-dotenv
 plotly
 reportlab
