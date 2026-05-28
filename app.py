@@ -879,13 +879,7 @@ if st.session_state["analysis"]:
         st.plotly_chart(fig, use_container_width=True)
 
     with res_col2:
-        st.markdown(f"""
-        <div class='card executive-summary-card'>
-            <div class='card-header-icon'>📝</div>
-            <div class='card-title'>Executive Summary</div>
-            <div class='card-body-text'>{analysis['summary']}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"<div class='card executive-summary-card'><div class='card-header-icon'>📝</div><div class='card-title'>Executive Summary</div><div class='card-body-text'>{analysis['summary']}</div></div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -904,12 +898,7 @@ if st.session_state["analysis"]:
             st.markdown("#### ✅ Top Core Strengths")
             strengths_html = "<div class='strengths-container'>"
             for strength in analysis['top_strengths']:
-                strengths_html += f"""
-                <div class='strength-card'>
-                    <div class='strength-icon'>✓</div>
-                    <div class='strength-text'>{strength}</div>
-                </div>
-                """
+                strengths_html += f"<div class='strength-card'><div class='strength-icon'>✓</div><div class='strength-text'>{strength}</div></div>"
             strengths_html += "</div>"
             st.markdown(strengths_html, unsafe_allow_html=True)
                 
@@ -919,12 +908,7 @@ if st.session_state["analysis"]:
                 st.markdown("<p style='color: #cbd5e1; margin-bottom: 12px;'>Incorporate these critical keywords into your CV content to bypass semantic ATS filter thresholds:</p>", unsafe_allow_html=True)
                 keywords_html = "<div class='keywords-container'>"
                 for keyword in analysis['missing_keywords']:
-                    keywords_html += f"""
-                    <span class='keyword-badge'>
-                        <span class='keyword-dot'></span>
-                        {keyword}
-                    </span>
-                    """
+                    keywords_html += f"<span class='keyword-badge'><span class='keyword-dot'></span>{keyword}</span>"
                 keywords_html += "</div>"
                 st.markdown(keywords_html, unsafe_allow_html=True)
             else:
@@ -934,35 +918,18 @@ if st.session_state["analysis"]:
         col_ats, col_star = st.columns(2)
         with col_ats:
             st.markdown("#### 📊 ATS Formatting Review")
-            st.markdown(f"""
-            <div class='metric-card'>
-                <div class='metric-label'>Structure & Parsability Score</div>
-                <div class='metric-value'>{analysis['formatting_score']}%</div>
-                <div class='metric-status'><b>ATS Compatibility:</b> {analysis['ats_compatibility']}</div>
-                <div class='metric-desc'><b>Formatting Feedback:</b> {analysis['formatting_feedback']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div class='metric-card'><div class='metric-label'>Structure & Parsability Score</div><div class='metric-value'>{analysis['formatting_score']}%</div><div class='metric-status'><b>ATS Compatibility:</b> {analysis['ats_compatibility']}</div><div class='metric-desc'><b>Formatting Feedback:</b> {analysis['formatting_feedback']}</div></div>", unsafe_allow_html=True)
             
         with col_star:
             st.markdown("#### ✨ STAR Method Efficacy")
-            st.markdown(f"""
-            <div class='star-card'>
-                <div class='star-badge'>AI Evaluation</div>
-                <div class='star-content'>{analysis['star_method_evaluation']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div class='star-card'><div class='star-badge'>AI Evaluation</div><div class='star-content'>{analysis['star_method_evaluation']}</div></div>", unsafe_allow_html=True)
             
     with tab3:
         st.markdown("#### 🛠 Actionable Profile Roadmap")
         st.markdown("<p style='color: #cbd5e1; margin-bottom: 16px;'>Apply these sequential recommendations to strategically optimize candidate fit and human readability:</p>", unsafe_allow_html=True)
         roadmap_html = "<div class='roadmap-container'>"
         for idx, suggestion in enumerate(analysis['improvement_suggestions']):
-            roadmap_html += f"""
-            <div class='roadmap-card'>
-                <div class='roadmap-number-badge'>{idx + 1}</div>
-                <div class='roadmap-text'>{suggestion}</div>
-            </div>
-            """
+            roadmap_html += f"<div class='roadmap-card'><div class='roadmap-number-badge'>{idx + 1}</div><div class='roadmap-text'>{suggestion}</div></div>"
         roadmap_html += "</div>"
         st.markdown(roadmap_html, unsafe_allow_html=True)
             
